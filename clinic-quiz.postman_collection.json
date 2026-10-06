@@ -1,221 +1,312 @@
 {
   "info": {
-    "_postman_id": "7d92eb2e-df32-4b13-a02c-c4a8f668f511",
-    "name": "Clinic JPA and JPQL Requirements",
-    "description": "Individual Postman requests for requirements A1-A4, B1-B4, C1-C4, and the two bonus requirements. The URLs and request bodies use the real seeded data currently in the clinic database: patient Aline Uwase (23), doctor Alice Mugisha (13), Room 101 (14), Cardiology (13), and October 2026 appointments (IDs 21-30). Base URL: http://localhost:1014. Run A4 before C4; C4 changes appointment statuses. Run the bonus cleanup last; it deletes records.",
+    "_postman_id": "clinic-quiz-27278",
+    "name": "Clinic JPA JPQL Quiz",
+    "description": "AUCA Kigali Clinic quiz collection. Base URL: http://localhost:1014",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:1014"
+    }
+  ],
   "item": [
     {
-      "name": "Seed data - individual records",
-      "description": "These standalone GET requests use the same direct URL and response workflow as the screenshot. The IDs are from the currently seeded database.",
+      "name": "CRUD",
       "item": [
         {
-          "name": "Aline Uwase - patient 23",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "http://localhost:1014/api/patients/23",
-            "description": "Expected seeded record: patient 23, Aline Uwase, born 1995-04-12."
-          },
-          "response": [
-            {
-              "name": "Seeded patient response",
-              "originalRequest": {
-                "method": "GET",
-                "header": [],
-                "url": "http://localhost:1014/api/patients/23"
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"dateOfBirth\": \"1995-04-12\",\n  \"firstName\": \"Aline\",\n  \"id\": 23,\n  \"lastName\": \"Uwase\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Alice Mugisha - doctor 13",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "http://localhost:1014/api/doctors/13",
-            "description": "Seeded doctor assigned to Room 101 and the Cardiology and Dermatology specializations."
-          }
-        },
-        {
-          "name": "Review A - appointment 23",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "http://localhost:1014/api/appointments/23",
-            "description": "Seeded appointment for Aline Uwase with Alice Mugisha on 2026-10-20; status SCHEDULED."
-          }
-        }
-      ]
-    },
-    {
-      "name": "Part A - Derived queries",
-      "item": [
-        {
-          "name": "A1 - Find patients by last name Uwase",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "http://localhost:1014/api/patients/by-last-name?lastName=uwase",
-            "description": "Expected seeded results: Aline Uwase (23), then Claudine Uwase (24), sorted by first name without regard to case."
-          }
-        },
-        {
-          "name": "A2 - Scheduled appointments, earliest first",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "http://localhost:1014/api/appointments/by-status?status=SCHEDULED",
-            "description": "Uses the AppointmentStatus enum value SCHEDULED. Current seed has appointments on 2026-10-05 (21), 2026-10-20 (23), and 2026-11-02 (27)."
-          }
-        },
-        {
-          "name": "A3 - Appointments October 1-31, 2026 inclusive",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "http://localhost:1014/api/appointments/between?start=2026-10-01&end=2026-10-31",
-            "description": "Uses the seeded October appointments. Both dates are inclusive; results are ordered by appointment date."
-          }
-        },
-        {
-          "name": "A4 - No double booking (expects HTTP 409)",
+          "name": "Office - Create",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"appointmentDate\": \"2026-10-20\",\n  \"reason\": \"A4 double-booking verification\",\n  \"status\": \"SCHEDULED\",\n  \"patient\": { \"id\": 23 },\n  \"doctor\": { \"id\": 13 }\n}",
-              "options": { "raw": { "language": "json" } }
+              "raw": "{\n  \"name\": \"Room 101\",\n  \"officeNumber\": 101\n}"
             },
-            "url": "http://localhost:1014/api/appointments/save",
-            "description": "Alice Mugisha (doctor 13) already has non-cancelled appointments on 2026-10-20. Expected: HTTP 409 and \"Doctor is already booked on that date\"; no appointment is saved."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Double booking is rejected with HTTP 409\", function () {",
-                  "    pm.response.to.have.status(409);",
-                  "    pm.expect(pm.response.text()).to.include(\"Doctor is already booked on that date\");",
-                  "});"
-                ]
-              }
+            "url": "{{baseUrl}}/api/offices/save"
+          }
+        },
+        {
+          "name": "Office - Get all",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/offices/all"
+          }
+        },
+        {
+          "name": "Patient - Create",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Aline\",\n  \"lastName\": \"Uwase\",\n  \"dateOfBirth\": \"1995-04-12\"\n}"
+            },
+            "url": "{{baseUrl}}/api/patients/save"
+          }
+        },
+        {
+          "name": "Patient - Get all",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/patients/all"
+          }
+        },
+        {
+          "name": "Doctor - Create",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Alice\",\n  \"lastName\": \"Mugisha\",\n  \"dateOfBirth\": \"1990-01-15\",\n  \"office\": { \"id\": 1 }\n}"
+            },
+            "url": "{{baseUrl}}/api/doctors/save"
+          }
+        },
+        {
+          "name": "Doctor - Get all",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/doctors/all"
+          }
+        },
+        {
+          "name": "Specialization - Create",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cardiology\"\n}"
+            },
+            "url": "{{baseUrl}}/api/specializations/save"
+          }
+        },
+        {
+          "name": "Specialization - Get all",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/specializations/all"
+          }
+        },
+        {
+          "name": "Appointment - Create (A4)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appointmentDate\": \"2026-11-25\",\n  \"reason\": \"Check-up\",\n  \"status\": \"SCHEDULED\",\n  \"patient\": { \"id\": 1 },\n  \"doctor\": { \"id\": 2 }\n}"
+            },
+            "url": "{{baseUrl}}/api/appointments/save"
+          }
+        },
+        {
+          "name": "Appointment - Get all",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/appointments/all"
+          }
+        },
+        {
+          "name": "Doctor - Add specialization",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/doctors/1/specialization/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Part A - Derived",
+      "item": [
+        {
+          "name": "A1 Patients by last name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/patients/by-last-name?lastName=uwase",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patients", "by-last-name"],
+              "query": [{ "key": "lastName", "value": "uwase" }]
             }
-          ]
+          }
+        },
+        {
+          "name": "A2 Appointments by status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/by-status?status=SCHEDULED",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments", "by-status"],
+              "query": [{ "key": "status", "value": "SCHEDULED" }]
+            }
+          }
+        },
+        {
+          "name": "A3 Appointments between dates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/between?start=2026-10-01&end=2026-10-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments", "between"],
+              "query": [
+                { "key": "start", "value": "2026-10-01" },
+                { "key": "end", "value": "2026-10-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "A4 Save appointment (double booking check)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appointmentDate\": \"2026-10-05\",\n  \"reason\": \"Duplicate test\",\n  \"status\": \"SCHEDULED\",\n  \"patient\": { \"id\": 1 },\n  \"doctor\": { \"id\": 1 }\n}"
+            },
+            "url": "{{baseUrl}}/api/appointments/save"
+          }
         }
       ]
     },
     {
-      "name": "Part B - JPQL joins",
+      "name": "Part B - JPQL Joins",
       "item": [
         {
-          "name": "B1 - Doctors with Cardiology (case-insensitive)",
+          "name": "B1 Doctors by specialization",
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:1014/api/doctors/by-specialization?name=cardiology",
-            "description": "Expected seeded result: Alice Mugisha, doctor 13, who holds Cardiology."
+            "url": {
+              "raw": "{{baseUrl}}/api/doctors/by-specialization?name=cardiology",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "doctors", "by-specialization"],
+              "query": [{ "key": "name", "value": "cardiology" }]
+            }
           }
         },
         {
-          "name": "B2 - Doctors without an office",
+          "name": "B2 Doctors without office",
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:1014/api/doctors/without-office",
-            "description": "Expected seeded result: Jean Habimana, doctor 15, with no office; sorted by last name."
+            "url": "{{baseUrl}}/api/doctors/without-office"
           }
         },
         {
-          "name": "B3 - Specializations nobody offers",
+          "name": "B3 Unused specializations",
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:1014/api/specializations/unused",
-            "description": "Expected seeded result: Neurology, specialization 16."
+            "url": "{{baseUrl}}/api/specializations/unused"
           }
         },
         {
-          "name": "B4 - Patients with an appointment with Alice Mugisha (doctor 13)",
+          "name": "B4 Patients of a doctor",
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:1014/api/patients/of-doctor/13",
-            "description": "Expected seeded results include Aline Uwase (23) and Claudine Uwase (24), each listed once."
+            "url": "{{baseUrl}}/api/patients/of-doctor/1"
           }
         }
       ]
     },
     {
-      "name": "Part C - Aggregates and bulk updates",
+      "name": "Part C - Aggregates and Bulk",
       "item": [
         {
-          "name": "C1 - Appointment counts by status",
+          "name": "C1 Appointments stats by status",
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:1014/api/appointments/stats/by-status",
-            "description": "Expected for the current seed data: SCHEDULED 3, CONFIRMED 3, COMPLETED 2, CANCELLED 2. Statuses with no appointments are omitted."
+            "url": "{{baseUrl}}/api/appointments/stats/by-status"
           }
         },
         {
-          "name": "C2 - Frequent patients (minimum 3 appointments)",
+          "name": "C2 Frequent patients",
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:1014/api/patients/frequent?min=3",
-            "description": "Expected seeded result: Aline Uwase (patient 23), with 3 appointments. Returns Patient entities, most appointments first."
+            "url": {
+              "raw": "{{baseUrl}}/api/patients/frequent?min=3",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "patients", "frequent"],
+              "query": [{ "key": "min", "value": "3" }]
+            }
           }
         },
         {
-          "name": "C3 - Busiest office",
+          "name": "C3 Busiest office",
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:1014/api/offices/busiest",
-            "description": "Expected current seeded result: Room 101, office number 101, with 5 appointments."
+            "url": "{{baseUrl}}/api/offices/busiest"
           }
         },
         {
-          "name": "C4 - Cancel Alice's non-completed appointments on October 20 (changes data)",
+          "name": "C4 Cancel day (doctor absent)",
           "request": {
             "method": "PATCH",
             "header": [],
-            "url": "http://localhost:1014/api/appointments/cancel-day?doctorId=13&date=2026-10-20",
-            "description": "Expected response with current seed data: \"2 appointments cancelled\". Changes appointments 23 and 24 to CANCELLED. Run after A4 and any checks that expect their original statuses."
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/cancel-day?doctorId=1&date=2026-10-20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments", "cancel-day"],
+              "query": [
+                { "key": "doctorId", "value": "1" },
+                { "key": "date", "value": "2026-10-20" }
+              ]
+            }
           }
         }
       ]
     },
     {
       "name": "Bonus",
-      "description": "Run the DELETE request last; it permanently deletes seeded appointments.",
       "item": [
         {
-          "name": "Bonus +5 - Appointments page (5 per page, newest first)",
+          "name": "Bonus Page appointments",
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:1014/api/appointments/page?page=0&size=5&sort=appointmentDate,desc",
-            "description": "Returns a Page<Appointment>; current seed data has totalPages=2 and totalElements=10."
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/page?page=0&size=5&sort=appointmentDate,desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments", "page"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "5" },
+                { "key": "sort", "value": "appointmentDate,desc" }
+              ]
+            }
           }
         },
         {
-          "name": "Bonus +5 - Delete cancellations before October 15 (destructive)",
+          "name": "Bonus Delete cancelled before date",
           "request": {
             "method": "DELETE",
             "header": [],
-            "url": "http://localhost:1014/api/appointments/cancelled-before?date=2026-10-15",
-            "description": "Expected on the original seed data: \"2 appointments deleted\" (appointments 26 and 30). Permanently deletes records; run last."
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/cancelled-before?date=2026-11-01",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments", "cancelled-before"],
+              "query": [{ "key": "date", "value": "2026-11-01" }]
+            }
           }
         }
       ]
