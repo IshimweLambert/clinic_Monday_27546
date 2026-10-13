@@ -13,14 +13,16 @@ public interface SpecializationRepository extends JpaRepository<Specialization, 
 
     Specialization findByName(String name);
 
-    // B3 JPQL: specializations nobody offers
     @Query("SELECT s FROM Specialization s WHERE s.doctors IS EMPTY")
     List<Specialization> findUnusedSpecializations();
 
-    // Earlier aggregate helper (3 columns)
     @Query("SELECT s.id, s.name, COUNT(d) "
             + "FROM Specialization s LEFT JOIN s.doctors d "
             + "GROUP BY s.id, s.name "
             + "ORDER BY COUNT(d) DESC")
     List<Object[]> countDoctorsPerSpecialization();
+
+    default List<Specialization> findUnassignedSpecializations() {
+        return findUnusedSpecializations();
+    }
 }

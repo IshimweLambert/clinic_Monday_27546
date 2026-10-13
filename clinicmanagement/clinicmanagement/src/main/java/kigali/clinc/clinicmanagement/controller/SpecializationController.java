@@ -68,9 +68,13 @@ public class SpecializationController {
         return new ResponseEntity<>(returnedMessage, HttpStatus.NOT_FOUND);
     }
 
-    // B3
     @GetMapping("/unused")
-    public ResponseEntity<?> unused() {
+    public ResponseEntity<?> findUnassignedSpecializations() {
+        return ResponseEntity.ok(specializationService.findUnused());
+    }
+
+    @GetMapping("/free")
+    public ResponseEntity<?> findAvailableSpecializations() {
         return ResponseEntity.ok(specializationService.findUnused());
     }
 }

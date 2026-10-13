@@ -69,15 +69,18 @@ public class PatientController {
         return new ResponseEntity<>(returnedMessage, HttpStatus.NOT_FOUND);
     }
 
-    // A1
+    @GetMapping("/surname")
+    public ResponseEntity<?> getPatientsBySurname(@RequestParam String lastName) {
+        return ResponseEntity.ok(patientService.findByLastName(lastName));
+    }
+
     @GetMapping("/by-last-name")
     public ResponseEntity<?> byLastName(@RequestParam String lastName) {
         return ResponseEntity.ok(patientService.findByLastName(lastName));
     }
 
-    // B4
-    @GetMapping("/of-doctor/{doctorId}")
-    public ResponseEntity<?> ofDoctor(@PathVariable Long doctorId) {
+    @GetMapping("/doctor/{doctorId}")
+    public ResponseEntity<?> getPatientsForDoctor(@PathVariable Long doctorId) {
         Object result = patientService.findPatientsOfDoctor(doctorId);
         if (result instanceof String) {
             return new ResponseEntity<>(result, HttpStatus.NOT_FOUND);
@@ -85,9 +88,13 @@ public class PatientController {
         return ResponseEntity.ok(result);
     }
 
-    // C2
+    @GetMapping("/of-doctor/{doctorId}")
+    public ResponseEntity<?> ofDoctor(@PathVariable Long doctorId) {
+        return getPatientsForDoctor(doctorId);
+    }
+
     @GetMapping("/frequent")
-    public ResponseEntity<?> frequent(@RequestParam long min) {
+    public ResponseEntity<?> frequentVisitors(@RequestParam long min) {
         List<Patient> patients = patientService.findFrequentPatients(min);
         return ResponseEntity.ok(patients);
     }

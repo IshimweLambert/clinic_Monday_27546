@@ -23,12 +23,12 @@ import kigali.clinc.clinicmanagement.service.OfficeService;
 public class OfficeController {
 
     @Autowired
-    private OfficeService officeServes;
+    private OfficeService officeService;
 
     @PostMapping(value = "/save", consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> saveOffice(@RequestBody Office office) {
-        String returnedMessage = officeServes.saveOffice(office);
+        String returnedMessage = officeService.saveOffice(office);
         if (returnedMessage.equalsIgnoreCase("Office is saved Successfully")) {
             return new ResponseEntity<>(returnedMessage, HttpStatus.CREATED);
         } else {
@@ -38,12 +38,12 @@ public class OfficeController {
 
     @GetMapping(value = "/all")
     public ResponseEntity<?> getAllOffices() {
-        return new ResponseEntity<>(officeServes.findAll(), HttpStatus.OK);
+        return new ResponseEntity<>(officeService.findAll(), HttpStatus.OK);
     }
 
     @GetMapping(value = "/{id}")
     public ResponseEntity<?> getOfficeById(@PathVariable Long id) {
-        Optional<Office> office = officeServes.findById(id);
+        Optional<Office> office = officeService.findById(id);
         if (office.isEmpty()) {
             return new ResponseEntity<>("Office not found", HttpStatus.NOT_FOUND);
         }
@@ -52,7 +52,7 @@ public class OfficeController {
 
     @PutMapping(value = "/update/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateOffice(@PathVariable Long id, @RequestBody Office office) {
-        String returnedMessage = officeServes.updateOffice(id, office);
+        String returnedMessage = officeService.updateOffice(id, office);
         if (returnedMessage.equalsIgnoreCase("Office is updated Successfully")) {
             return new ResponseEntity<>(returnedMessage, HttpStatus.OK);
         } else if (returnedMessage.equalsIgnoreCase("Office not found")) {
@@ -64,20 +64,20 @@ public class OfficeController {
 
     @DeleteMapping(value = "/delete/{id}")
     public ResponseEntity<?> deleteOffice(@PathVariable Long id) {
-        String returnedMessage = officeServes.deleteOffice(id);
+        String returnedMessage = officeService.deleteOffice(id);
         if (returnedMessage.equalsIgnoreCase("Office is deleted Successfully")) {
             return new ResponseEntity<>(returnedMessage, HttpStatus.OK);
         }
         return new ResponseEntity<>(returnedMessage, HttpStatus.NOT_FOUND);
     }
 
-    // C3
+    @GetMapping("/most-used")
+    public ResponseEntity<?> getMostUsedOffice() {
+        return ResponseEntity.ok(officeService.findBusiestOffice());
+    }
+
     @GetMapping("/busiest")
     public ResponseEntity<?> busiest() {
-        Object result = officeServes.findBusiestOffice();
-        if (result instanceof String) {
-            return ResponseEntity.ok(result);
-        }
-        return ResponseEntity.ok(result);
+        return getMostUsedOffice();
     }
 }

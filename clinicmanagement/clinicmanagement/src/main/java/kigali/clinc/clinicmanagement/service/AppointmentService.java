@@ -1,6 +1,7 @@
 package kigali.clinc.clinicmanagement.service;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,6 +38,9 @@ public class AppointmentService {
         if (appointment.getDoctor() == null || appointment.getDoctor().getId() == null) {
             return "Doctor is required";
         }
+        if (appointment.getAppointmentDate() == null || appointment.getAppointmentDate().isBefore(LocalDate.now())) {
+            return "Appointment date cannot be in the past";
+        }
         Optional<Patient> patient = patientRepo.findById(appointment.getPatient().getId());
         if (patient.isEmpty()) {
             return "Patient not found";
@@ -46,7 +50,7 @@ public class AppointmentService {
             return "Doctor not found";
         }
 
-        // A4: no double booking (ignore CANCELLED)
+        appointment.setStatus(AppointmentStatus.SCHEDULED);
         boolean booked = appointmentRepo.existsByDoctor_IdAndAppointmentDateAndStatusNot(
                 doctor.get().getId(),
                 appointment.getAppointmentDate(),
@@ -106,38 +110,120 @@ public class AppointmentService {
         return "Appointment is deleted Successfully";
     }
 
-    // A2
     public List<Appointment> findByStatus(AppointmentStatus status) {
         return appointmentRepo.findByStatusOrderByAppointmentDateAsc(status);
     }
 
-    // A3
+    public List<Appointment> findAppointmentsForStatus(AppointmentStatus status) {
+        return findByStatus(status);
+    }
+
     public List<Appointment> findBetween(LocalDate start, LocalDate end) {
         return appointmentRepo.findByAppointmentDateBetweenOrderByAppointmentDateAsc(start, end);
     }
 
-    // C1
+    public List<Appointment> findAppointmentsInDateRange(LocalDate start, LocalDate end) {
+        return findBetween(start, end);
+    }
+
     public List<Object[]> statsByStatus() {
         return appointmentRepo.countAppointmentsByStatus();
     }
 
-    // C4
+    public List<Object[]> summarizeStatusCounts() {
+        return statsByStatus();
+    }
+
     @Transactional
     public String cancelDay(Long doctorId, LocalDate date) {
         int updated = appointmentRepo.cancelAppointmentsForDoctorOnDate(doctorId, date);
         return updated + " appointments cancelled";
     }
 
-    // Bonus page
+    @Transactional
+    public String cancelAppointmentsForDoctorOnDate(Long doctorId, LocalDate date) {
+        return cancelDay(doctorId, date);
+    }
+
     public Page<Appointment> findPage(Pageable pageable) {
         return appointmentRepo.findAll(pageable);
     }
 
-    // Bonus delete
+    public Page<Appointment> findAppointmentPage(Pageable pageable) {
+        return findPage(pageable);
+    }
+
     @Transactional
     public String deleteCancelledBefore(LocalDate date) {
         int deleted = appointmentRepo.deleteByStatusAndAppointmentDateBefore(
                 AppointmentStatus.CANCELLED, date);
         return deleted + " appointments deleted";
+    }
+
+    @Transactional
+    public String removeCancelledAppointmentsBefore(LocalDate date) {
+        return deleteCancelledBefore(date);
+    }
+
+    @Transactional
+    public String updateAppointmentStatus(Long id, AppointmentStatus newStatus) {
+        Optional<Appointment> appointmentOpt = appointmentRepo.findById(id);
+        if (appointmentOpt.isEmpty()) {
+            return "The appointment with that id does not exist";
+        }
+        Appointment appointment = appointmentOpt.get();
+        AppointmentStatus current = appointment.getStatus();
+        if (current == AppointmentStatus.COMPLETED || current == AppointmentStatus.CANCELLED) {
+            return "Cannot change status from " + current + " to " + newStatus;
+        }
+        if (current == AppointmentStatus.SCHEDULED && (newStatus != AppointmentStatus.CONFIRMED && newStatus != AppointmentStatus.CANCELLED)) {
+            return "Cannot change status from " + current + " to " + newStatus;
+        }
+        if (current == AppointmentStatus.CONFIRMED && (newStatus != AppointmentStatus.COMPLETED && newStatus != AppointmentStatus.CANCELLED)) {
+            return "Cannot change status from " + current + " to " + newStatus;
+        }
+        appointment.setStatus(newStatus);
+        appointmentRepo.save(appointment);
+        return "Appointment status updated successfully";
+    }
+
+    @Transactional
+    public String rescheduleAppointment(Long id, LocalDate newDate) {
+        Optional<Appointment> appointmentOpt = appointmentRepo.findById(id);
+        if (appointmentOpt.isEmpty()) {
+            return "The appointment with that id does not exist";
+        }
+        Appointment appointment = appointmentOpt.get();
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED || appointment.getStatus() == AppointmentStatus.CANCELLED) {
+            return "A " + appointment.getStatus() + " appointment cannot be rescheduled";
+        }
+        if (newDate.isBefore(LocalDate.now())) {
+            return "Appointment date cannot be in the past";
+        }
+        boolean booked = appointmentRepo.existsByDoctor_IdAndAppointmentDateAndStatusNot(
+                appointment.getDoctor().getId(),
+                newDate,
+                AppointmentStatus.CANCELLED);
+        if (booked) {
+            return "Doctor is already booked on that date";
+        }
+        appointment.setAppointmentDate(newDate);
+        appointment.setStatus(AppointmentStatus.SCHEDULED);
+        appointmentRepo.save(appointment);
+        return "Appointment rescheduled successfully";
+    }
+
+    public List<Appointment> findAgenda(Long doctorId, LocalDate date) {
+        return appointmentRepo.findByDoctor_IdAndAppointmentDateAndStatusNotOrderByAppointmentDateAsc(
+                doctorId,
+                date,
+                AppointmentStatus.CANCELLED);
+    }
+
+    public List<Appointment> findUpcomingForPatient(String ssNumber) {
+        return appointmentRepo.findByPatient_SsNumberAndAppointmentDateGreaterThanEqualAndStatusInOrderByAppointmentDateAsc(
+                ssNumber,
+                LocalDate.now(),
+                Arrays.asList(AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED));
     }
 }

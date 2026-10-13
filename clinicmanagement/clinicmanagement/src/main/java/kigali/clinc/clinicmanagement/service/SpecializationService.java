@@ -54,8 +54,11 @@ public class SpecializationService {
         return "Specialization is deleted Successfully";
     }
 
-    // B3
-    public List<Specialization> findUnused() {
+    public List<Specialization> findUnusedSpecializations() {
         return specializationRepo.findUnusedSpecializations();
+    }
+
+    public List<Specialization> findUnused() {
+        return findUnusedSpecializations();
     }
 }

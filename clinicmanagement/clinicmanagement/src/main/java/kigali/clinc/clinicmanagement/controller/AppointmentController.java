@@ -83,34 +83,39 @@ public class AppointmentController {
         return new ResponseEntity<>(returnedMessage, HttpStatus.NOT_FOUND);
     }
 
-    // A2
+    @GetMapping("/status")
+    public ResponseEntity<?> getAppointmentsByStatus(@RequestParam AppointmentStatus status) {
+        return ResponseEntity.ok(appointmentService.findByStatus(status));
+    }
+
     @GetMapping("/by-status")
     public ResponseEntity<?> byStatus(@RequestParam AppointmentStatus status) {
         return ResponseEntity.ok(appointmentService.findByStatus(status));
     }
 
-    // A3
-    @GetMapping("/between")
-    public ResponseEntity<?> between(@RequestParam String start, @RequestParam String end) {
+    @GetMapping("/date-range")
+    public ResponseEntity<?> getAppointmentsInDateRange(@RequestParam String start, @RequestParam String end) {
         LocalDate startDate = LocalDate.parse(start);
         LocalDate endDate = LocalDate.parse(end);
         return ResponseEntity.ok(appointmentService.findBetween(startDate, endDate));
     }
 
-    // C1
-    @GetMapping({"/count-by-status", "/stats/by-status"})
+    @GetMapping("/between")
+    public ResponseEntity<?> between(@RequestParam String start, @RequestParam String end) {
+        return getAppointmentsInDateRange(start, end);
+    }
+
+    @GetMapping({"/count-by-status", "/stats/by-status", "/status-summary"})
     public ResponseEntity<?> statsByStatus() {
         return ResponseEntity.ok(appointmentService.statsByStatus());
     }
 
-    // C4
     @PatchMapping("/cancel-day")
     public ResponseEntity<?> cancelDay(@RequestParam Long doctorId, @RequestParam String date) {
         LocalDate localDate = LocalDate.parse(date);
         return ResponseEntity.ok(appointmentService.cancelDay(doctorId, localDate));
     }
 
-    // Bonus page
     @GetMapping("/page")
     public ResponseEntity<?> page(
             @RequestParam(defaultValue = "0") int page,
@@ -125,7 +130,6 @@ public class AppointmentController {
         return ResponseEntity.ok(appointmentService.findPage(pageable));
     }
 
-    // Bonus delete cancelled before
     @DeleteMapping("/cancelled-before")
     public ResponseEntity<?> cancelledBefore(@RequestParam String date) {
         LocalDate localDate = LocalDate.parse(date);

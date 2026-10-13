@@ -15,22 +15,22 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-@Entity 
-@Table (name="appointment")
+@Entity
+@Table(name = "appointment")
 public class Appointment {
-    
-    @Id 
-    @GeneratedValue (strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column (name="appointment_date")
+    @Column(name = "appointment_date")
     private LocalDate appointmentDate;
 
-    @Column (name="reason")
+    @Column(name = "reason")
     private String reason;
 
-    @Enumerated (EnumType.STRING)
-    @Column (name="status")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     private AppointmentStatus status;
 
     @JsonIgnoreProperties({"appointments", "specializations", "office"})
@@ -90,8 +90,5 @@ public class Appointment {
     public void setDoctor(Doctor doctor) {
         this.doctor = doctor;
     }
-
-    
-
-
 }
+

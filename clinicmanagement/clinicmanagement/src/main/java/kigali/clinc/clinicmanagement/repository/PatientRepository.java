@@ -1,6 +1,7 @@
 package kigali.clinc.clinicmanagement.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,17 +13,28 @@ import kigali.clinc.clinicmanagement.domain.Patient;
 @Repository
 public interface PatientRepository extends JpaRepository<Patient, Long> {
 
-    // A1 DERIVED
     List<Patient> findByLastNameIgnoreCaseOrderByFirstNameAsc(String lastName);
 
-    // B4 JPQL
+    Optional<Patient> findBySsNumber(String ssNumber);
+
+    default List<Patient> findPatientsByLastNameIgnoringCaseOrderByFirstNameAsc(String lastName) {
+        return findByLastNameIgnoreCaseOrderByFirstNameAsc(lastName);
+    }
+
     @Query("SELECT DISTINCT a.patient FROM Appointment a WHERE a.doctor.id = :doctorId")
     List<Patient> findPatientsOfDoctor(@Param("doctorId") Long doctorId);
 
-    // C2 JPQL
+    default List<Patient> findPatientsAssignedToDoctor(Long doctorId) {
+        return findPatientsOfDoctor(doctorId);
+    }
+
     @Query("SELECT a.patient FROM Appointment a "
             + "GROUP BY a.patient "
-            + "HAVING COUNT(a) >= :min "
+            + "HAVING COUNT(a) >= :minimumVisits "
             + "ORDER BY COUNT(a) DESC")
-    List<Patient> findFrequentPatients(@Param("min") long min);
+    List<Patient> findFrequentPatients(@Param("minimumVisits") long minimumVisits);
+
+    default List<Patient> findPatientsWithAtLeastVisits(long minimumVisits) {
+        return findFrequentPatients(minimumVisits);
+    }
 }

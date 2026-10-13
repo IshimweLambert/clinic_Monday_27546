@@ -53,12 +53,14 @@ public class PatientService {
         return "Patient is deleted Successfully";
     }
 
-    // A1
     public List<Patient> findByLastName(String lastName) {
         return patientRepo.findByLastNameIgnoreCaseOrderByFirstNameAsc(lastName);
     }
 
-    // B4
+    public List<Patient> findPatientsBySurname(String lastName) {
+        return findByLastName(lastName);
+    }
+
     public Object findPatientsOfDoctor(Long doctorId) {
         if (!doctorRepo.existsById(doctorId)) {
             return "The doctor with that id does not exist";
@@ -66,8 +68,15 @@ public class PatientService {
         return patientRepo.findPatientsOfDoctor(doctorId);
     }
 
-    // C2
+    public Object findAssignedPatientsForDoctor(Long doctorId) {
+        return findPatientsOfDoctor(doctorId);
+    }
+
     public List<Patient> findFrequentPatients(long min) {
         return patientRepo.findFrequentPatients(min);
+    }
+
+    public List<Patient> findPatientsWithMinimumVisits(long min) {
+        return findFrequentPatients(min);
     }
 }

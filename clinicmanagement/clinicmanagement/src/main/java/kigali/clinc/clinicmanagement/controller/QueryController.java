@@ -32,25 +32,32 @@ public class QueryController {
     @Autowired
     private SpecializationRepository specializationRepository;
 
-    // 1. Derived: PENDING appointments of a doctor, ordered by date
-    @GetMapping("/pending/{doctorId}")
-    public ResponseEntity<?> pendingByDoctor(@PathVariable Long doctorId) {
+    @GetMapping("/doctor/{doctorId}/pending")
+    public ResponseEntity<?> getPendingAppointmentsForDoctor(@PathVariable Long doctorId) {
         return ResponseEntity.ok(
                 appointmentRepository.findByDoctor_IdAndStatusOrderByAppointmentDateAsc(
                         doctorId, AppointmentStatus.PENDING));
     }
 
-    // 2. JPQL: PENDING appointments whose date has passed
+    @GetMapping("/pending/{doctorId}")
+    public ResponseEntity<?> pendingByDoctor(@PathVariable Long doctorId) {
+        return getPendingAppointmentsForDoctor(doctorId);
+    }
+
     @GetMapping("/pending-overdue")
-    public ResponseEntity<?> overduePending() {
+    public ResponseEntity<?> findDelayedPendingAppointments() {
         return ResponseEntity.ok(
                 appointmentRepository.findOverduePendingAppointments(
                         AppointmentStatus.PENDING, LocalDate.now()));
     }
 
-    // 3. Aggregate: appointments per doctor, busiest first
+    @GetMapping("/overdue-pending")
+    public ResponseEntity<?> overduePending() {
+        return findDelayedPendingAppointments();
+    }
+
     @GetMapping("/appointments-per-doctor")
-    public ResponseEntity<?> appointmentsPerDoctor() {
+    public ResponseEntity<?> appointmentsByDoctorSummary() {
         List<Object[]> rows = appointmentRepository.countAppointmentsPerDoctor();
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object[] row : rows) {
@@ -64,14 +71,17 @@ public class QueryController {
         return ResponseEntity.ok(result);
     }
 
-    // 4. JOIN: appointments of doctors with a given specialization
-    @GetMapping("/by-specialization/{specializationId}")
-    public ResponseEntity<?> bySpecialization(@PathVariable Long specializationId) {
+    @GetMapping("/doctor-specialization/{specializationId}")
+    public ResponseEntity<?> findAppointmentsForSpecialization(@PathVariable Long specializationId) {
         return ResponseEntity.ok(
                 appointmentRepository.findAppointmentsBySpecializationId(specializationId));
     }
 
-    // 5. Pagination: page 1, 10 per page, sorted by date (Spring page 0 = first page)
+    @GetMapping("/by-specialization/{specializationId}")
+    public ResponseEntity<?> bySpecialization(@PathVariable Long specializationId) {
+        return findAppointmentsForSpecialization(specializationId);
+    }
+
     @GetMapping("/doctor/{doctorId}/appointments")
     public ResponseEntity<?> doctorAppointmentsPage(@PathVariable Long doctorId) {
         Pageable pageable = PageRequest.of(0, 10, Sort.by("appointmentDate").ascending());
@@ -79,7 +89,6 @@ public class QueryController {
         return ResponseEntity.ok(page);
     }
 
-    // Specialization aggregate: 3 columns (id, name, doctorCount)
     @GetMapping("/doctors-per-specialization")
     public ResponseEntity<?> doctorsPerSpecialization() {
         List<Object[]> rows = specializationRepository.countDoctorsPerSpecialization();

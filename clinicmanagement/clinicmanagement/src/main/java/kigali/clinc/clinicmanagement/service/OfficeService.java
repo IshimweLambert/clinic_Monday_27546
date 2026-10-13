@@ -55,12 +55,15 @@ public class OfficeService {
         return "Office is deleted Successfully";
     }
 
-    // C3
-    public Object findBusiestOffice() {
+    public Object findMostUsedOffice() {
         List<Object[]> rows = officeRepo.findBusiestOffice();
         if (rows.isEmpty()) {
             return "No appointments yet";
         }
         return rows.get(0);
+    }
+
+    public Object findBusiestOffice() {
+        return findMostUsedOffice();
     }
 }

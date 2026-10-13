@@ -1,5 +1,6 @@
 package kigali.clinc.clinicmanagement.controller;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,35 +71,69 @@ public class DoctorController {
         return new ResponseEntity<>(returnedMessage, HttpStatus.NOT_FOUND);
     }
 
-    @PostMapping(value = "/{doctorId}/specialization/{specializationId}")
+    @PutMapping(value = "/{doctorId}/specializations/{specializationId}")
     public ResponseEntity<?> addSpecialization(@PathVariable Long doctorId,
                                                @PathVariable Long specializationId) {
         String returnedMessage = doctorService.addSpecialization(doctorId, specializationId);
-        if (returnedMessage.equalsIgnoreCase("Specialization added to doctor Successfully")) {
+        if (returnedMessage.equalsIgnoreCase("Specialization added to the doctor")) {
             return new ResponseEntity<>(returnedMessage, HttpStatus.OK);
+        } else if (returnedMessage.equalsIgnoreCase("The doctor with that id does not exist")
+                || returnedMessage.equalsIgnoreCase("That specialization does not exist")) {
+            return new ResponseEntity<>(returnedMessage, HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<>(returnedMessage, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(returnedMessage, HttpStatus.CONFLICT);
     }
 
-    @DeleteMapping(value = "/{doctorId}/specialization/{specializationId}")
+    @DeleteMapping(value = "/{doctorId}/specializations/{specializationId}")
     public ResponseEntity<?> removeSpecialization(@PathVariable Long doctorId,
                                                   @PathVariable Long specializationId) {
         String returnedMessage = doctorService.removeSpecialization(doctorId, specializationId);
-        if (returnedMessage.equalsIgnoreCase("Specialization removed from doctor Successfully")) {
+        if (returnedMessage.equalsIgnoreCase("Specialization removed from the doctor")) {
             return new ResponseEntity<>(returnedMessage, HttpStatus.OK);
+        } else if (returnedMessage.equalsIgnoreCase("The doctor with that id does not exist")
+                || returnedMessage.equalsIgnoreCase("That specialization does not exist")) {
+            return new ResponseEntity<>(returnedMessage, HttpStatus.NOT_FOUND);
         }
-        return new ResponseEntity<>(returnedMessage, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(returnedMessage, HttpStatus.CONFLICT);
     }
 
-    // B1
+    @GetMapping("/specialized")
+    public ResponseEntity<?> findDoctorsBySpecialization(@RequestParam String name) {
+        return ResponseEntity.ok(doctorService.findBySpecializationName(name));
+    }
+
     @GetMapping("/by-specialization")
     public ResponseEntity<?> bySpecialization(@RequestParam String name) {
         return ResponseEntity.ok(doctorService.findBySpecializationName(name));
     }
 
-    // B2
     @GetMapping("/without-office")
-    public ResponseEntity<?> withoutOffice() {
+    public ResponseEntity<?> findDoctorsMissingOffice() {
         return ResponseEntity.ok(doctorService.findDoctorsWithoutOffice());
+    }
+
+    @GetMapping("/unassigned-office")
+    public ResponseEntity<?> findDoctorsWithoutAssignedOffice() {
+        return ResponseEntity.ok(doctorService.findDoctorsWithoutOffice());
+    }
+
+    @GetMapping("/free-offices")
+    public ResponseEntity<?> freeOffices() {
+        return ResponseEntity.ok(doctorService.findFreeOffices());
+    }
+
+    @GetMapping("/workload")
+    public ResponseEntity<?> doctorWorkload(@RequestParam String start, @RequestParam String end) {
+        return ResponseEntity.ok(doctorService.findDoctorWorkload(LocalDate.parse(start), LocalDate.parse(end)));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<?> searchByName(@RequestParam String name) {
+        return ResponseEntity.ok(doctorService.searchDoctorsByName(name));
+    }
+
+    @GetMapping("/agenda")
+    public ResponseEntity<?> agenda(@RequestParam Long doctorId, @RequestParam String date) {
+        return ResponseEntity.ok(doctorService.findAgenda(doctorId, LocalDate.parse(date)));
     }
 }

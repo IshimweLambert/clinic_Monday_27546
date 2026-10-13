@@ -18,10 +18,19 @@ import kigali.clinc.clinicmanagement.domain.AppointmentStatus;
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
-    // ===== Previous exercise helpers (keep working) =====
     List<Appointment> findByDoctor_IdAndStatusOrderByAppointmentDateAsc(
             Long doctorId,
             AppointmentStatus status);
+
+    List<Appointment> findByDoctor_IdAndAppointmentDateAndStatusNotOrderByAppointmentDateAsc(
+            Long doctorId,
+            LocalDate appointmentDate,
+            AppointmentStatus status);
+
+    List<Appointment> findByPatient_SsNumberAndAppointmentDateGreaterThanEqualAndStatusInOrderByAppointmentDateAsc(
+            String ssNumber,
+            LocalDate date,
+            List<AppointmentStatus> statuses);
 
     @Query("SELECT new kigali.clinc.clinicmanagement.PendingAppointmentInfo("
             + "CONCAT(p.firstName, ' ', p.lastName), "
@@ -45,29 +54,26 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     Page<Appointment> findByDoctor_IdOrderByAppointmentDateAsc(Long doctorId, Pageable pageable);
 
-    // ===== Quiz Part A DERIVED =====
-
-    // A2
     List<Appointment> findByStatusOrderByAppointmentDateAsc(AppointmentStatus status);
 
-    // A3
     List<Appointment> findByAppointmentDateBetweenOrderByAppointmentDateAsc(
             LocalDate start,
             LocalDate end);
 
-    // A4
     boolean existsByDoctor_IdAndAppointmentDateAndStatusNot(
             Long doctorId,
             LocalDate appointmentDate,
             AppointmentStatus status);
 
-    // ===== Quiz Part C =====
-
-    // C1
     @Query("SELECT a.status, COUNT(a) FROM Appointment a GROUP BY a.status")
     List<Object[]> countAppointmentsByStatus();
 
-    // C4
+    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.status = :status")
+    Long countByStatus(@Param("status") AppointmentStatus status);
+
+    @Query("SELECT COUNT(a) FROM Appointment a WHERE a.appointmentDate = :date")
+    Long countByAppointmentDate(@Param("date") LocalDate date);
+
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Appointment a SET a.status = kigali.clinc.clinicmanagement.domain.AppointmentStatus.CANCELLED "
             + "WHERE a.doctor.id = :doctorId AND a.appointmentDate = :date "
@@ -76,7 +82,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("doctorId") Long doctorId,
             @Param("date") LocalDate date);
 
-    // Bonus DELETE
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM Appointment a WHERE a.status = :status AND a.appointmentDate < :date")
     int deleteByStatusAndAppointmentDateBefore(
